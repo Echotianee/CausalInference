@@ -5,5 +5,5 @@ seaborn
 scipy
 statsmodels
 jupyter
-sklearn
+scikit-learn
 yellowbrick
