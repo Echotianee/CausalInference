@@ -17,7 +17,12 @@ class Client:
         self.client_events_table["purchases_30_day_after"] = 0
 
 
-    def process_clients_chunk(self):
+    def process_client_add_purchase_nr_to_event_write_to_csv(self):
+        """
+        This function will process the client and add the purchases_7_day_after and purchases_30_day_after columns
+        to the events.csv file
+        :return:
+        """
 
         for index, row in self.client_events_table.iterrows():
             user_id = row["USER_CLIENT_NUMBER"]
@@ -65,6 +70,15 @@ class Client:
 
         return events
 
+    def get_table_of_client(self, table_name):
+        if table_name == "purchases":
+            return self.client_purchases_table
+        elif table_name == "events":
+            return self.client_events_table
+        else:
+            print("Table name not recognized")
+            return None
+
 
 class ProcessClientsFolderTree:
     def __init__(self):
@@ -74,6 +88,10 @@ class ProcessClientsFolderTree:
         self.process_clients_setup()
 
     def process_clients_setup(self):
+        """
+        This function will setup the clients in the client folder. It will add all of the clients to the clientid_list
+        :return:
+        """
         for client_id in os.listdir(self.client_path):
             if "." not in client_id:
                 self.clientid_list.append(client_id)
@@ -81,35 +99,101 @@ class ProcessClientsFolderTree:
                 print("Skipping file: ", client_id)
 
 
-def process_clients_in_chunk(client_id_chunk):
-    """
-    This function will process the clients in the chunk
-    :param client_id_chunk:
-    :return:
-    """
-    for index, client_id in enumerate(client_id_chunk):
-        if index % 10 == 0:
-            print("Processing client: ", client_id)
-        client = Client(client_id=client_id, client_folder_path= "client_data")
-        client.process_clients_chunk()
-        print("Done with client: ", client_id)
+    def process_clients_in_chunk(self, client_id_chunk):
+        """
+        This function will process the clients in the chunk
+        :param client_id_chunk:
+        :return:
+        """
+        for index, client_id in enumerate(client_id_chunk):
+            if index % 10 == 0:
+                print("Processing client: ", client_id)
+            client = Client(client_id=client_id, client_folder_path= "client_data")
+            client.process_client_add_purchase_nr_to_event_write_to_csv()
+            print("Done with client: ", client_id)
 
-def setup_chunks_from_client_list(client_list, chunk_size=100):
-    """
-    This function will setup the clients in chunk in size of chunk_size
-    It return the chunks based on hte chunk size
-    """
-    chunks = [client_list[i:i + chunk_size] for i in range(0, len(client_list), chunk_size)]
-    return chunks
+    def setup_chunks_from_client_list(self, client_list, chunk_size=100):
+        """
+        This function will setup the clients in chunk in size of chunk_size
+        It return the chunks based on hte chunk size
+        """
+        chunks = [client_list[i:i + chunk_size] for i in range(0, len(client_list), chunk_size)]
+        return chunks
+
+    def process_client_purchases_to_event_multiprocessing(self):
+        """
+        This function will process the clients in the client folder and add the purchases_7_day_after
+        and purchases_30_day_after columns to the events.csv file
+        :return:
+        """
+        chunks_to_process = process_clients.setup_chunks_from_client_list(self.clientid_list, chunk_size=100)
+
+        with multiprocessing.Pool(processes=8) as pool:
+
+            results = pool.map(self.process_clients_in_chunk, chunks_to_process)
+
+    #________________________________Aggregate with multiprocessing_________________________________________________#
+
+    def aggregate_clients_in_chunk(self, client_id_chunk, table_name="purchases"):
+        """
+        This function will process the clients in the chunk
+        :param client_id_chunk:
+        :param table_name: to aggregate can only be purchases or events
+        :return:
+        """
+        if table_name == "purchases":
+            client = Client(client_id=client_id_chunk[0], client_folder_path= "client_data")
+            df = client.get_table_of_client(table_name)
+            for index, client_id in enumerate(client_id_chunk[1:]):
+                client = Client(client_id=client_id, client_folder_path= "client_data")
+                df = pd.concat([df, client.get_table_of_client(table_name)], ignore_index=True)
+        elif table_name == "events":
+            client = Client(client_id=client_id_chunk[0], client_folder_path= "client_data")
+            df = client.get_table_of_client(table_name)
+            for index, client_id in enumerate(client_id_chunk[1:]):
+                client = Client(client_id=client_id, client_folder_path= "client_data")
+                df = pd.concat([df, client.get_table_of_client(table_name)], ignore_index=True)
+        return df
+
+    def aggregate_clients_multi_processing(self, table_name="purchases", write_to_csv=False,
+                                           file_name_to_write="processed_purchase_events.csv"):
+        """
+        This function will aggregate the clients in the client folder using multiprocessing
+        You can specify the table name to aggregate
+        :param table_name:
+        :param write_to_csv:
+        :param file_name_to_write:
+        :return:
+        """
+        chunks_to_process = process_clients.setup_chunks_from_client_list(self.clientid_list, chunk_size=100)
+
+        # Prepare tuples of arguments
+        args_for_processing = [(chunk, table_name) for chunk in chunks_to_process]
+
+        with multiprocessing.Pool(processes=8) as pool:
+            results = pool.starmap(process_clients.aggregate_clients_in_chunk, args_for_processing)
+
+        df = pd.concat(results, ignore_index=True)
+        if write_to_csv:
+            df.to_csv(file_name_to_write, sep="|", index=False)
+        return df
 
 
 
 if __name__ == "__main__":
+    #if you run this program, you will add each of the clients in the client_data folder. THen for each of the
+    # clients you will add the purchases_7_day_after and purchases_30_day_after columns to the events.csv file
     process_clients = ProcessClientsFolderTree()
     client_id_list = process_clients.clientid_list
-    chunks_to_process = setup_chunks_from_client_list(client_id_list, chunk_size=100)
+    chunks_to_process = process_clients.setup_chunks_from_client_list(client_id_list, chunk_size=100)
 
-    with multiprocessing.Pool(processes=8) as pool:
+    #with multiprocessing.Pool(processes=8) as pool:
 
-        results = pool.map(process_clients_in_chunk, chunks_to_process)
+    #    results = pool.map(process_clients.process_clients_in_chunk, chunks_to_process)
+
+    #df_list = []
+    #with multiprocessing.Pool(processes=8) as pool:
+
+    #    results = pool.map(process_clients.aggregate_clients_in_chunk, chunks_to_process)
+    process_clients.aggregate_clients_multi_processing()
 
