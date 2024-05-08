@@ -126,7 +126,7 @@ class ProcessClientsFolderTree:
         and purchases_30_day_after columns to the events.csv file
         :return:
         """
-        chunks_to_process = process_clients.setup_chunks_from_client_list(self.clientid_list, chunk_size=100)
+        chunks_to_process = self.setup_chunks_from_client_list(self.clientid_list, chunk_size=100)
 
         with multiprocessing.Pool(processes=8) as pool:
 
@@ -165,13 +165,13 @@ class ProcessClientsFolderTree:
         :param file_name_to_write:
         :return:
         """
-        chunks_to_process = process_clients.setup_chunks_from_client_list(self.clientid_list, chunk_size=100)
+        chunks_to_process = self.setup_chunks_from_client_list(self.clientid_list, chunk_size=100)
 
         # Prepare tuples of arguments
         args_for_processing = [(chunk, table_name) for chunk in chunks_to_process]
 
         with multiprocessing.Pool(processes=8) as pool:
-            results = pool.starmap(process_clients.aggregate_clients_in_chunk, args_for_processing)
+            results = pool.starmap(self.aggregate_clients_in_chunk, args_for_processing)
 
         df = pd.concat(results, ignore_index=True)
         if write_to_csv:
@@ -186,6 +186,7 @@ if __name__ == "__main__":
     process_clients = ProcessClientsFolderTree()
     client_id_list = process_clients.clientid_list
     chunks_to_process = process_clients.setup_chunks_from_client_list(client_id_list, chunk_size=100)
+    process_clients.process_client_purchases_to_event_multiprocessing()
 
     #with multiprocessing.Pool(processes=8) as pool:
 
@@ -195,5 +196,9 @@ if __name__ == "__main__":
     #with multiprocessing.Pool(processes=8) as pool:
 
     #    results = pool.map(process_clients.aggregate_clients_in_chunk, chunks_to_process)
-    process_clients.aggregate_clients_multi_processing()
+    #process_clients.aggregate_clients_multi_processing(table_name="purchases", write_to_csv=True,
+    #                                                   file_name_to_write="processed_purchase_events.csv")
+
+    #process_clients.aggregate_clients_multi_processing(table_name="events", write_to_csv=True,
+    #                                                   file_name_to_write="processed_events.csv")
 
