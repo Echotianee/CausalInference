@@ -2,7 +2,7 @@
 1. Clone the repository
 2. Install the required packages in requirements.txt
 3. Create folder "processed_data" in the root of the project
-4. Add the "processed_events.csv" file to the "processed_purchase_events.csv" folder
+4. Add the "processed_events.csv" file and "processed_purchase_events.csv" to the "processed_data" folder
 5. Run jupyter notebook save_clients_in_folder_structure_updated.ipynb
 
 
