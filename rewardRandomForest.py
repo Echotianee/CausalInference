@@ -22,8 +22,9 @@ class RewardPredictor():
         :param features: features to predict the reward
         :return: reward
         """
-        possible_features =
-        return self.model.predict(features)
+        possible_features = ["PRICE", "PROPOSITION", "USER_CLIENT_NUMBER", "USER_SESSION_ID", "PROMOTION_LABEL", "PAGE_NAME", "PAGE_SECTION", "PAGE_SECTION_POSITION", "PROMOTION_PRICE", "PRODUCT_TYPE", "DEVICE_INFO_BRAND", "DEVICE_INFO_TYPE", "DEVICE_INFO_BROWSER", "USER_SALES_GROUP", "USER_SEGMENT", "USER_SALES_DISTRICT", "USER_PROMOTIONS_ALLOWED"]
+        features_to_predict_with = [feature for feature in possible_features if feature in possible_features]
+        return self.model.predict(features_to_predict_with)
 
 
 
