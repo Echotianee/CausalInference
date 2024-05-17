@@ -135,10 +135,14 @@ class Client:
         """
         total_spend = 0
         date = datetime.datetime.strptime(date, "%Y-%m-%d").date()
+        try:
+            bought_product_id_in_category = self.client_purchases_table[
+                (self.client_purchases_table["ARTICLE_CATEGORIE"] == article_category)
+            ]["PROPOSITION"].unique()
 
-        bought_product_id_in_category = self.client_purchases_table[
-            (self.client_purchases_table["ARTICLE_CATEGORIE"] == article_category)
-        ]["PROPOSITION"].unique()
+        except KeyError:
+            print("No product category found for client", self.client_id)
+            return 0
 
         product_purchase_events = self.client_purchases_table[
             (self.client_purchases_table["DATE"] <= str(date)) &
@@ -244,7 +248,7 @@ class ProcessClientsFolderTree:
 
 
             client.write_tables_to_csv()
-            print("Done with client: ", client_id)
+            #print("Done with client: ", client_id)
 
     def setup_chunks_from_client_list(self, client_list, chunk_size=100):
         """
@@ -345,23 +349,18 @@ if __name__ == "__main__":
     # If you want to process the clients in the client folder and add the purchases_7_day_after
     # and purchases_30_day_after columns to the events.csv file, you can use the function below
 
-    process_clients.process_client_purchases_to_event_multiprocessing(
+    """process_clients.process_client_purchases_to_event_multiprocessing(
         add_purchases=False,
         add_total_product_spend=True,
-        add_total_category_product_spend=True)
-    """process_clients.process_clients_in_chunk_7days(chunks_to_process[0],
-                                                   add_purchases=False,
-                                                   add_total_product_spend=False,
-                                                   add_total_category_product_spend=True,
+        add_total_category_product_spend=True)"""
 
-                                                   )"""
 
 
     # If you want to aggregate the clients in the client folder using multiprocessing, you can use the function below
     # This function will aggregate the clients in the client folder using multiprocessing
 
-    #process_clients.aggregate_clients_multi_processing(table_name="purchases", write_to_csv=True,
-    #                                                   file_name_to_write="processed_data/processed_purchase_events_final.csv")
+    process_clients.aggregate_clients_multi_processing(table_name="purchases", write_to_csv=True,
+                                                       file_name_to_write="processed_data/processed_purchase_events_final.csv")
 
-    #process_clients.aggregate_clients_multi_processing(table_name="events", write_to_csv=True,
-    #                                                   file_name_to_write="processed_data/processed_events_final.csv")
+    process_clients.aggregate_clients_multi_processing(table_name="events", write_to_csv=True,
+                                                       file_name_to_write="processed_data/processed_events_final.csv")
