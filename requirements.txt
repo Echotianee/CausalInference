@@ -7,3 +7,4 @@ statsmodels
 jupyter
 scikit-learn
 yellowbrick
+tdqm
