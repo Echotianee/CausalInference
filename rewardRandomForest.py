@@ -1,4 +1,5 @@
 import pickle
+import json
 
 class RewardPredictor():
     def __init__(self, model_location="model/reward_predictor_model.pkl"):
@@ -81,8 +82,12 @@ class RewardPredictor():
 if __name__ == "__main__":
     reward_predictor = RewardPredictor()
 
-    print(reward_predictor.predict_reward(features))
-    print(reward_predictor.predict_ranking(["product1", "product2", "product3"], features))
+    with open("processed_data/user_recommendations_types.json") as f:
+        clients_per_recommendation_type = json.load(f)
+
+
+    #print(reward_predictor.predict_reward(features))
+    #print(reward_predictor.predict_ranking(["product1", "product2", "product3"], features))
 
 
 
