@@ -139,7 +139,6 @@ class Client:
             bought_product_id_in_category = self.client_purchases_table[
                 (self.client_purchases_table["ARTICLE_CATEGORIE"] == article_category)
             ]["PROPOSITION"].unique()
-            print("bought_product_id_in_category", bought_product_id_in_category)
 
         except KeyError:
             print("No product category found for client", self.client_id)
@@ -283,7 +282,7 @@ class ProcessClientsFolderTree:
              )
             for chunk in chunks_to_process]
 
-        with multiprocessing.Pool(processes=1) as pool:
+        with multiprocessing.Pool(processes=8) as pool:
             results = pool.starmap(self.process_clients_in_chunk_7days, args_for_processing)
 
         """if add_purchases:
@@ -368,8 +367,8 @@ if __name__ == "__main__":
     # This function will aggregate the clients in the client folder using multiprocessing
 
     """process_clients.aggregate_clients_multi_processing(table_name="purchases", write_to_csv=True,
-                                                       file_name_to_write="processed_data/processed_purchase_events_final.csv")
+                                                       file_name_to_write="processed_data/processed_purchase_events_final_correct.csv")
 
     process_clients.aggregate_clients_multi_processing(table_name="events", write_to_csv=True,
-                                                       file_name_to_write="processed_data/processed_events_final.csv")
+                                                       file_name_to_write="processed_data/processed_events_final_correct.csv")
 """
