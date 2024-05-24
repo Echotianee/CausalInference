@@ -1,6 +1,7 @@
 import pickle
 import json
 import os
+import numpy as np
 import pandas as pd
 
 class RewardPredictor():
@@ -25,15 +26,20 @@ class RewardPredictor():
         :param features: features to predict the reward
         :return: reward
         """
-        possible_features = ["PRICE", "PROPOSITION", "USER_CLIENT_NUMBER", "USER_SESSION_ID", "PROMOTION_LABEL", "PAGE_NAME", "PAGE_SECTION", "PAGE_SECTION_POSITION", "PROMOTION_PRICE", "PRODUCT_TYPE", "DEVICE_INFO_BRAND", "DEVICE_INFO_TYPE", "DEVICE_INFO_BROWSER", "USER_SALES_GROUP", "USER_SEGMENT", "USER_SALES_DISTRICT", "USER_PROMOTIONS_ALLOWED"]
+        possible_features = ["PRICE", "PROPOSITION", "USER_CLIENT_NUMBER", "USER_SESSION_ID", "PROMOTION_LABEL",  "PAGE_SECTION", "PAGE_SECTION_POSITION", "PROMOTION_PRICE", "PRODUCT_TYPE", "DEVICE_INFO_BRAND", "DEVICE_INFO_TYPE", "DEVICE_INFO_BROWSER", "USER_SALES_GROUP", "USER_SEGMENT", "USER_SALES_DISTRICT", "USER_PROMOTIONS_ALLOWED"]
         possible_features = [
                             "PRICE",
                             "PROPOSITION",
                             "USER_CLIENT_NUMBER",
                             "USER_SESSION_ID",
-                            "PROMOTION_LABEL",
+            "PROMOTION_LABEL",
+            "PROMOTION_PRICE",
+            "PAGE_SECTION"
+            "PAGE_NAME",
+                            "PAGE_SECTION_POSITION",
+
                             "PAGE_SECTION",
-                            "PROMOTION_PRICE",
+
                             "DEVICE_INFO_BRAND",
                             "DEVICE_INFO_TYPE",
                             "DEVICE_INFO_BROWSER",
@@ -58,11 +64,41 @@ class RewardPredictor():
                             "precipitation_amount_lead_4",
                             "total_spend_on_category_product",
                             "total_spend_on_product",
-                            "day_of_week"
+                            "day_of_week",
+
                         ]
 
+        possible_features = ['PRICE', 'PROPOSITION', 'USER_CLIENT_NUMBER', 'USER_SESSION_ID',
+       'PROMOTION_LABEL', 'PAGE_SECTION', 'PROMOTION_PRICE',
+       'DEVICE_INFO_BRAND', 'DEVICE_INFO_TYPE', 'DEVICE_INFO_BROWSER',
+       'USER_SALES_GROUP', 'USER_SEGMENT', 'USER_SALES_DISTRICT',
+       'USER_PROMOTIONS_ALLOWED', 'temperature', 'precipcover', 'precip',
+       'temperature_lead_1', 'precipitation_coverage_lead_1',
+       'precipitation_amount_lead_1', 'temperature_lead_2',
+       'precipitation_coverage_lead_2', 'precipitation_amount_lead_2',
+       'temperature_lead_3', 'precipitation_coverage_lead_3',
+       'precipitation_amount_lead_3', 'temperature_lead_4',
+       'precipitation_coverage_lead_4', 'precipitation_amount_lead_4',
+       'total_spend_on_category_product', 'total_spend_on_product',
+       'day_of_week']
 
-        features_to_predict_with = [feature for feature in features if feature in possible_features]
+        features["PROMOTION_PRICE"] = 0
+        features["PROMOTION_LABEL"] = 0
+        features["PAGE_NAME"] = 0
+        features["PAGE_SECTION"] = 0
+
+        features["USER_PROMOTIONS_ALLOWED"] = 0
+        features["DATE"] = pd.to_datetime(features["DATE"])
+        features["day_of_week"] = features["DATE"].dt.dayofweek
+
+
+
+
+        #features_to_predict_with = [feature for feature in features if feature in possible_features]
+
+        features_to_predict_with = features[possible_features]
+        #print(features_to_predict_with["PRICE"])
+        #features_to_predict_with["PRICE"] = float(features_to_predict_with["PRICE"])
         return self.model.predict(features_to_predict_with)
 
     def predict_ranking_complete_dataset(self):
@@ -85,11 +121,27 @@ class RewardPredictor():
                 if ".DS_Store" in folder:
                     continue
                 rewards[folder][file] = 0
-                df = pd.read_csv("benchmark_data/" + folder + "/" + file, sep="|")
+                print("benchmark_data/" + folder + "/" + file)
+                if folder == "benchmark_top_sold_products":
+                    df = pd.read_csv("benchmark_data/" + folder + "/" + file, sep=",")
+
+                else:
+                    df = pd.read_csv("benchmark_data/" + folder + "/" + file, sep="|")
                 transformed_df = self.preprocessing_data(df)
-                for index, row in transformed_df.iterrows():
-                    reward = self.predict_reward(row)
-                    rewards[folder][file] += reward
+                reward = self.predict_reward(transformed_df)
+                rewards[folder][file] += reward
+
+        summed_rewards = {
+
+        }
+
+        for key, value in rewards.items():
+            for key2, value2 in value.items():
+                summed_rewards[f"{key} - {key2}"] = int(np.sum(value2))
+
+
+        with open("rewards.json", "w") as file:
+            file.write(json.dumps(summed_rewards))
 
         return rewards
 
@@ -125,7 +177,6 @@ class RewardPredictor():
         for col in ["PAGE_SECTION", "DEVICE_INFO_BRAND", "DEVICE_INFO_TYPE",
                     "DEVICE_INFO_BROWSER", "USER_SALES_GROUP", "USER_SEGMENT", "USER_SALES_DISTRICT",
                     ]:
-            print(data_events.columns)
             unique_col_values = data_events[col].unique()
 
             category_number = 0

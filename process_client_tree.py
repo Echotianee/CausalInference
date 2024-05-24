@@ -357,7 +357,7 @@ if __name__ == "__main__":
     # and purchases_30_day_after columns to the events.csv file, you can use the function below
 
     process_clients.process_client_purchases_to_event_multiprocessing(
-        add_purchases=False,
+        add_purchases=True,
         add_total_product_spend=True,
         add_total_category_product_spend=True)
 
@@ -366,9 +366,8 @@ if __name__ == "__main__":
     # If you want to aggregate the clients in the client folder using multiprocessing, you can use the function below
     # This function will aggregate the clients in the client folder using multiprocessing
 
-    """process_clients.aggregate_clients_multi_processing(table_name="purchases", write_to_csv=True,
+    process_clients.aggregate_clients_multi_processing(table_name="purchases", write_to_csv=True,
                                                        file_name_to_write="processed_data/processed_purchase_events_final_correct.csv")
 
     process_clients.aggregate_clients_multi_processing(table_name="events", write_to_csv=True,
                                                        file_name_to_write="processed_data/processed_events_final_correct.csv")
-"""
