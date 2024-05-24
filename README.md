@@ -64,10 +64,12 @@
 # Exploration files that do not be needed to run the system
 1. [causal inference.ipynb](causal%20inference.ipynb)
    - Exploration of the data
-2. [Explore_data_contexts.ipynb](exploration_files/Explore_data_contexts.ipynb)
+2. [Explore_data_contexts.ipynb](Explore_data_contexts.ipynb)
    - Exploration of the data. Seeing the contexts
 3. [segmentation.ipynb](segmentation.ipynb)
    - Exploring of data relating to RFM
 4. [evaluator.ipynb](evaluator.ipynb)
    - Data exploration of the Random forest model. 
    - Also contextual bandit for predicting the RFM group for users
+5. [visualization_of_graphs.ipynb](visualization_of_graphs.ipynb)
+    - Visualization of the results made by the evaluation of ranking vs benchmark of random forest model
